@@ -42,6 +42,13 @@ Movement.prototype.initialize = function() {
 };
 
 Movement.prototype.onCollisionStart = function() {
+    // Reset jumps exactly on the landing transition (0 -> 1 contacts).
+    // Doing this here instead of every frame in update() avoids a stale
+    // contactCount (which can lag a frame or two after leaving the ground)
+    // from granting extra jumps beyond maxJumps.
+    if (this.contactCount === 0) {
+        this.jumpsUsed = 0;
+    }
     this.contactCount++;
 };
 
@@ -99,12 +106,6 @@ Movement.prototype.update = function(dt) {
 
     // Apply impulse to move the entity
     this.entity.rigidbody.applyImpulse(this.force);
-
-    // Landing resets the jump counter, allowing a fresh set of jumps
-    // (including the extra air jump) once the ball touches ground again.
-    if (this.contactCount > 0) {
-        this.jumpsUsed = 0;
-    }
 
     if (keyboard.wasPressed(pc.KEY_SPACE) && this.jumpsUsed < this.maxJumps) {
         this.entity.rigidbody.linearVelocity = new pc.Vec3(
