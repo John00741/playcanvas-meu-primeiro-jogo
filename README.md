@@ -12,5 +12,6 @@ https://cdn.jsdelivr.net/gh/John00741/playcanvas-meu-primeiro-jogo@main/scripts/
 ## Scripts
 
 - `follow-camera.js` — controla a câmera que segue a bola
-- `movement.js` — controla o movimento da bola (WASD / setas) e teleporte ao cair
+- `movement.js` — controla o movimento da bola (WASD / setas), pulo/double jump (Espaço) e teleporte ao cair
 - `teleporter.js` — dispara o teleporte quando a bola entra no volume de trigger
+- `lava-flow.js` — anima a textura do material de lava (scroll + pulso de brilho), preso à entidade "Lava"

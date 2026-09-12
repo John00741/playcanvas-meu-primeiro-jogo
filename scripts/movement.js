@@ -18,14 +18,24 @@ Movement.attributes.add('jumpForce', {
     description: 'Controls how strong the ball jumps when Space is pressed'
 });
 
+Movement.attributes.add('maxJumps', {
+    type: 'number',
+    default: 2,
+    min: 1,
+    max: 5,
+    precision: 0,
+    description: 'How many times the ball can jump before touching the ground again (2 = double jump)'
+});
+
 // Initialize code called once per entity
 Movement.prototype.initialize = function() {
     this.force = new pc.Vec3();
     this.spawnPos = this.entity.getPosition().clone();
 
-    // Tracks how many surfaces the ball is currently touching, so it can
-    // only jump when it is actually resting on something (no double jump).
+    // Tracks how many surfaces the ball is currently touching, so jumps
+    // remaining reset only once it actually lands again.
     this.contactCount = 0;
+    this.jumpsUsed = 0;
 
     this.entity.collision.on('collisionstart', this.onCollisionStart, this);
     this.entity.collision.on('collisionend', this.onCollisionEnd, this);
@@ -90,9 +100,20 @@ Movement.prototype.update = function(dt) {
     // Apply impulse to move the entity
     this.entity.rigidbody.applyImpulse(this.force);
 
-    // Jump when Space is pressed, only if the ball is touching the ground
-    if (keyboard.wasPressed(pc.KEY_SPACE) && this.contactCount > 0) {
+    // Landing resets the jump counter, allowing a fresh set of jumps
+    // (including the extra air jump) once the ball touches ground again.
+    if (this.contactCount > 0) {
+        this.jumpsUsed = 0;
+    }
+
+    if (keyboard.wasPressed(pc.KEY_SPACE) && this.jumpsUsed < this.maxJumps) {
+        this.entity.rigidbody.linearVelocity = new pc.Vec3(
+            this.entity.rigidbody.linearVelocity.x,
+            0,
+            this.entity.rigidbody.linearVelocity.z
+        );
         this.entity.rigidbody.applyImpulse(0, this.jumpForce, 0);
+        this.jumpsUsed++;
     }
 };
 
