@@ -42,11 +42,12 @@ Movement.prototype.initialize = function() {
 };
 
 Movement.prototype.onCollisionStart = function() {
-    // Reset jumps exactly on the landing transition (0 -> 1 contacts).
-    // Doing this here instead of every frame in update() avoids a stale
-    // contactCount (which can lag a frame or two after leaving the ground)
-    // from granting extra jumps beyond maxJumps.
-    if (this.contactCount === 0) {
+    // Reset jumps on a genuine landing: the first contact after being
+    // airborne, while the ball isn't still moving upward. The upward
+    // velocity check matters because right after a jump the physics
+    // engine can report a spurious contact/end pair for a frame or two,
+    // which would otherwise refund a jump the player already used.
+    if (this.contactCount === 0 && this.entity.rigidbody.linearVelocity.y <= 0.1) {
         this.jumpsUsed = 0;
     }
     this.contactCount++;
