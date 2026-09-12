@@ -9,10 +9,34 @@ Movement.attributes.add('speed', {
     description: 'Controls the movement speed'
 });
 
+Movement.attributes.add('jumpForce', {
+    type: 'number',
+    default: 4,
+    min: 1,
+    max: 10,
+    precision: 1,
+    description: 'Controls how strong the ball jumps when Space is pressed'
+});
+
 // Initialize code called once per entity
 Movement.prototype.initialize = function() {
     this.force = new pc.Vec3();
     this.spawnPos = this.entity.getPosition().clone();
+
+    // Tracks how many surfaces the ball is currently touching, so it can
+    // only jump when it is actually resting on something (no double jump).
+    this.contactCount = 0;
+
+    this.entity.collision.on('collisionstart', this.onCollisionStart, this);
+    this.entity.collision.on('collisionend', this.onCollisionEnd, this);
+};
+
+Movement.prototype.onCollisionStart = function() {
+    this.contactCount++;
+};
+
+Movement.prototype.onCollisionEnd = function() {
+    this.contactCount = Math.max(0, this.contactCount - 1);
 };
 
 // Update code called every frame
@@ -65,6 +89,11 @@ Movement.prototype.update = function(dt) {
 
     // Apply impulse to move the entity
     this.entity.rigidbody.applyImpulse(this.force);
+
+    // Jump when Space is pressed, only if the ball is touching the ground
+    if (keyboard.wasPressed(pc.KEY_SPACE) && this.contactCount > 0) {
+        this.entity.rigidbody.applyImpulse(0, this.jumpForce, 0);
+    }
 };
 
 Movement.prototype.teleport = function(pos) {
